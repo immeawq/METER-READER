@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-zinc-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI METER READER</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        crimson: {
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        
+        /* Custom Corner Corners UI Component (กรอบสี่เหลี่ยมสีแดงแบบในภาพ) */
+        .tech-box {
+            position: relative;
+            background-color: rgba(24, 24, 27, 0.8);
+            border: 1px solid rgba(39, 39, 42, 0.8);
+        }
+        .tech-box::before, .tech-box::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .tech-box::before {
+            top: -1px;
+            left: -1px;
+            border-top: 2px solid #ef4444;
+            border-left: 2px solid #ef4444;
+        }
+        .tech-box::after {
+            bottom: -1px;
+            right: -1px;
+            border-bottom: 2px solid #ef4444;
+            border-right: 2px solid #ef4444;
+        }
+
+        /* Scan Animation Effect */
+        @keyframes scanLaser {
+            0% { top: 0%; opacity: 0.8; }
+            50% { top: 95%; opacity: 1; }
+            100% { top: 0%; opacity: 0.8; }
+        }
+        .scan-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ef4444, #ff8888, #ef4444, transparent);
+            box-shadow: 0 0 15px #ef4444, 0 0 30px #ef4444;
+            animation: scanLaser 1.8s ease-in-out infinite;
+            z-index: 20;
+        }
+    </style>
+</head>
+<body class="h-full text-zinc-100 flex flex-col min-h-screen bg-zinc-950 selection:bg-red-600 selection:text-white">
+    <!-- Header Navbar -->
+    <header class="bg-zinc-900/90 backdrop-blur-md border-b border-red-950/40 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-red-600 p-2 text-white shadow-lg shadow-red-900/50">
+                        <i data-lucide="gauge" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-base sm:text-lg tracking-wide uppercase text-white">AI METER READER</h1>
+                        <p class="text-[10px] text-zinc-400">AUTOMATED SYSTEM (ระบบอัตโนมัติ)</p>
+                    </div>
+                </div>
+
+                <!-- Status Badges & Controls -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <div id="config-status-badge" class="inline-flex items-center px-2.5 py-1 text-[11px] font-medium bg-red-950/40 text-red-400 border border-red-800/40">
+                        <i data-lucide="loader-2" class="w-3 h-3 animate-spin mr-1.5"></i>
+                        <span>Loading config...</span>
+                    </div>
+
+                    <button id="btn-open-config-modal" class="inline-flex items-center space-x-1 text-xs bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 p-2 sm:py-2 sm:px-3 border border-zinc-700/60 transition">
+                        <i data-lucide="file-json" class="w-4 h-4 text-red-400"></i>
+                        <span class="hidden md:inline">Config Format</span>
+                    </button>
+                    <button id="btn-open-settings" class="inline-flex items-center space-x-1.5 text-xs bg-red-600 hover:bg-red-700 text-white font-medium p-2 sm:py-2 sm:px-3.5 shadow-lg shadow-red-950/50 transition">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                        <span class="hidden md:inline">Settings (ตั้งค่า)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        
+        <!-- Config Error / Fallback Banner -->
+        <div id="banner-config-warning" class="hidden bg-red-950/30 border-l-4 border-red-600 p-3 sm:p-4 shadow-sm flex items-start space-x-3">
+            <i data-lucide="alert-triangle" class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"></i>
+            <div class="flex-1 text-xs text-red-200">
+                <p class="font-semibold">config.json not found (ไม่พบไฟล์ config.json)</p>
+                <p class="mt-0.5">Using fallback settings from <strong class="underline cursor-pointer text-white" onclick="openSettingsModal()">localStorage</strong>.</p>
+            </div>
+        </div>
+
+        <!-- Metric Stat Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div class="tech-box p-4 sm:p-5 flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Total Records (บันทึกทั้งหมด)</p>
+                    <h3 id="stat-total" class="text-2xl font-bold text-white mt-1">0</h3>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-zinc-800 text-red-500 flex items-center justify-center border border-zinc-700/50">
+                    <i data-lucide="file-text" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                </div>
+            </div>
+            <div class="tech-box p-4 sm:p-5 flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Latest Electricity (ไฟฟ้าล่าสุด)</p>
+                    <h3 id="stat-electricity" class="text-2xl font-bold text-red-500 mt-1">-</h3>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-950/40 text-red-500 flex items-center justify-center border border-red-900/30">
+                    <i data-lucide="zap" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                </div>
+            </div>
+            <div class="tech-box p-4 sm:p-5 flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Latest Water (น้ำประปาล่าสุด)</p>
+                    <h3 id="stat-water" class="text-2xl font-bold text-zinc-200 mt-1">-</h3>
+                </div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-zinc-800 text-zinc-300 flex items-center justify-center border border-zinc-700/50">
+                    <i data-lucide="droplet" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Scanner & Form Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+            <!-- Upload Box -->
+            <div class="lg:col-span-6 tech-box p-4 sm:p-5 flex flex-col">
+                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                    <h2 class="text-sm sm:text-base font-semibold text-white flex items-center gap-2">
+                        <i data-lucide="camera" class="w-4 h-4 sm:w-5 sm:h-5 text-red-500"></i>
+                        Scan Meter (สแกนรูปภาพ)
+                    </h2>
+                    <span class="text-[10px] text-zinc-500 font-mono">JPG, PNG, WEBP</span>
+                </div>
+
+                <div id="drop-zone" class="relative flex-1 min-h-[220px] sm:min-h-[250px] border border-dashed border-zinc-700/80 hover:border-red-600 p-4 flex flex-col items-center justify-center text-center bg-zinc-950/40 transition cursor-pointer group overflow-hidden">
+                    <!-- Scanner Laser Overlay -->
+                    <div id="scan-effect" class="hidden scan-line"></div>
+                    <div id="scan-grid" class="hidden absolute inset-0 bg-[radial-gradient(#ef4444_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none"></div>
+
+                    <input type="file" id="input-file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                    
+                    <div id="upload-placeholder" class="space-y-2 pointer-events-none z-0">
+                        <div class="w-12 h-12 bg-zinc-800 text-red-500 flex items-center justify-center mx-auto group-hover:scale-105 transition duration-200 border border-zinc-700">
+                            <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs sm:text-sm font-medium text-zinc-300">Drop image here or <span class="text-red-500 underline">browse</span></p>
+                            <p class="text-[11px] text-zinc-500 mt-1">Select meter image (เลือกรูปภาพมิเตอร์)</p>
+                        </div>
+                    </div>
+
+                    <img id="img-preview" class="hidden absolute inset-0 w-full h-full object-contain bg-zinc-950 p-1" alt="Meter Preview">
+                    <button id="btn-remove-img" class="hidden absolute top-3 right-3 z-30 bg-red-600 hover:bg-red-700 text-white p-1.5 shadow transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div class="mt-4">
+                    <button id="btn-scan" disabled class="w-full bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 disabled:text-zinc-600 disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 shadow-lg shadow-red-950/40 transition flex items-center justify-center gap-2 text-xs sm:text-sm">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <span>Process & Auto Save (ประมวลผลและบันทึกอัตโนมัติ)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI Result Box -->
+            <div class="lg:col-span-6 tech-box p-4 sm:p-5 flex flex-col">
+                <div class="flex items-center justify-between mb-3 sm:mb-4 border-b border-zinc-800 pb-3">
+                    <h2 class="text-sm sm:text-base font-semibold text-white flex items-center gap-2">
+                        <i data-lucide="check-square" class="w-4 h-4 sm:w-5 sm:h-5 text-red-500"></i>
+                        <span id="form-mode-title">AI Result & Save (ผลลัพธ์)</span>
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <span id="edit-mode-badge" class="hidden text-[10px] font-bold px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                            EDITING RECORD
+                        </span>
+                        <span id="ai-status-badge" class="hidden text-[10px] font-medium px-2 py-0.5 bg-zinc-800 text-zinc-300 border border-zinc-700">
+                            Ready
+                        </span>
+                    </div>
+                </div>
+
+                <div id="ai-loading" class="hidden py-10 flex flex-col items-center justify-center text-center space-y-3">
+                    <div class="w-8 h-8 border-2 border-red-900 border-t-red-600 animate-spin"></div>
+                    <p class="text-xs text-red-400 font-medium animate-pulse">Scanning image with Gemini AI...</p>
+                </div>
+
+                <div id="ai-empty-state" class="py-10 flex flex-col items-center justify-center text-center space-y-2 text-zinc-500">
+                    <i data-lucide="scan-line" class="w-10 h-10 stroke-[1.5]"></i>
+                    <p class="text-xs">Upload image to process (อัปโหลดรูปเพื่อสแกน)</p>
+                </div>
+
+                <form id="form-meter-result" class="hidden flex-1 space-y-3">
+                    <input type="hidden" id="editing-record-id" value="">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-zinc-400 mb-1">Meter Type (ประเภท)</label>
+                            <select id="result-type" required class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-zinc-200 focus:border-red-600 focus:outline-none">
+                                <option value="Electricity">Electricity (ไฟฟ้า)</option>
+                                <option value="Water">Water (น้ำประปา)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-zinc-400 mb-1">Reading Value (ค่าตัวเลข)</label>
+                            <input type="number" step="any" id="result-reading" required placeholder="0000.0" class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs font-semibold text-red-500 focus:border-red-600 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-medium text-zinc-400 mb-1">Serial Number</label>
+                            <input type="text" id="result-serial" placeholder="SN-123456" class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-zinc-200 focus:border-red-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-zinc-400 mb-1">AI Confidence (ความมั่นใจ)</label>
+                            <input type="text" id="result-confidence" readonly class="w-full bg-zinc-900 border border-zinc-800 text-zinc-500 px-3 py-2 text-xs cursor-not-allowed">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-medium text-zinc-400 mb-1">Notes (หมายเหตุ)</label>
+                        <textarea id="result-notes" rows="2" placeholder="Details..." class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-zinc-200 focus:border-red-600 focus:outline-none"></textarea>
+                    </div>
+
+                    <div class="pt-1 flex gap-2">
+                        <button type="button" id="btn-cancel-edit" class="hidden px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium py-2.5 transition">
+                            Cancel
+                        </button>
+                        <button type="submit" id="btn-save-db" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-4 shadow-lg shadow-red-950/40 transition flex items-center justify-center gap-2 text-xs sm:text-sm">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span id="btn-save-label">Update Record (บันทึกทับ)</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- History & Chart Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+            <div class="lg:col-span-5 tech-box p-4 sm:p-5 flex flex-col">
+                <h2 class="text-sm sm:text-base font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+                    <i data-lucide="trending-up" class="w-4 h-4 sm:w-5 sm:h-5 text-red-500"></i>
+                    Meter Trends (แนวโน้ม)
+                </h2>
+                <div class="flex-1 min-h-[200px] sm:min-h-[220px] relative flex items-center justify-center">
+                    <canvas id="meterChart"></canvas>
+                </div>
+            </div>
+
+            <div class="lg:col-span-7 tech-box p-4 sm:p-5 flex flex-col">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3 sm:mb-4">
+                    <h2 class="text-sm sm:text-base font-semibold text-white flex items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400"></i>
+                        Reading History (ประวัติ)
+                    </h2>
+                    
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="search-input" placeholder="Search..." class="px-2.5 py-1.5 text-xs bg-zinc-950 border border-zinc-800 text-zinc-200 focus:border-red-600 focus:outline-none w-28 sm:w-36">
+                        <select id="filter-type" class="text-xs bg-zinc-950 border border-zinc-800 px-2 py-1.5 text-zinc-200 focus:border-red-600 focus:outline-none">
+                            <option value="ALL">All Types</option>
+                            <option value="Electricity">Electricity</option>
+                            <option value="Water">Water</option>
+                        </select>
+                        <button id="btn-refresh" class="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 transition" title="Refresh">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto flex-1 border border-zinc-800">
+                    <table class="w-full text-left border-collapse min-w-[500px]">
+                        <thead>
+                            <tr class="bg-zinc-950 border-b border-zinc-800 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
+                                <th class="py-2.5 px-3">Date-Time</th>
+                                <th class="py-2.5 px-3">Type</th>
+                                <th class="py-2.5 px-3">Reading</th>
+                                <th class="py-2.5 px-3">Serial No.</th>
+                                <th class="py-2.5 px-3">Notes</th>
+                                <th class="py-2.5 px-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-meter-rows" class="divide-y divide-zinc-800/60 text-xs text-zinc-300">
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-zinc-500">Loading data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Config JSON Helper Modal -->
+    <div id="modal-config" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="tech-box max-w-xl w-full p-5 sm:p-6 shadow-2xl relative bg-zinc-900">
+            <button onclick="closeConfigModal()" class="absolute top-4 right-4 text-zinc-500 hover:text-white p-1">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center space-x-2 text-red-500 mb-3">
+                <i data-lucide="file-json" class="w-5 h-5"></i>
+                <h3 class="text-base sm:text-lg font-bold text-white">config.json Format</h3>
+            </div>
+            <p class="text-xs text-zinc-400 mb-3">Place <code class="bg-zinc-950 text-red-400 px-1.5 py-0.5 font-mono">config.json</code> in the same directory:</p>
+            
+            <div class="relative">
+                <pre class="bg-zinc-950 text-zinc-200 p-4 text-xs overflow-x-auto font-mono leading-relaxed border border-zinc-800" id="config-code-block">{
+  "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY_HERE",
+  "SUPABASE_URL": "YOUR_SUPABASE_URL_HERE",
+  "SUPABASE_ANON_KEY": "YOUR_SUPABASE_ANON_KEY_HERE"
+}</pre>
+                <button id="btn-copy-config" class="absolute top-3 right-3 bg-zinc-800 hover:bg-zinc-700 text-white text-xs px-2.5 py-1.5 transition flex items-center gap-1 border border-zinc-700">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    <span>Copy JSON</span>
+                </button>
+            </div>
+
+            <hr class="my-4 border-zinc-800">
+
+            <div class="flex items-center justify-between">
+                <span class="text-xs text-zinc-400">Need Supabase SQL script?</span>
+                <button id="btn-copy-sql" class="text-xs text-red-500 hover:underline font-medium flex items-center gap-1">
+                    <i data-lucide="database" class="w-3.5 h-3.5"></i>
+                    <span>Copy Table SQL</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Settings Fallback Modal -->
+    <div id="modal-settings" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="tech-box max-w-lg w-full p-5 sm:p-6 shadow-2xl relative bg-zinc-900">
+            <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-zinc-500 hover:text-white p-1">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center space-x-2 text-red-500 mb-4">
+                <i data-lucide="sliders" class="w-5 h-5"></i>
+                <h3 class="text-base sm:text-lg font-bold text-white">Fallback Settings (ตั้งค่าสำรอง)</h3>
+            </div>
+            
+            <form id="form-settings" class="space-y-3 sm:space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Gemini API Key</label>
+                    <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-zinc-200 focus:border-red-600 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Supabase URL</label>
+                    <input type="url" id="input-supabase-url" placeholder="https://xyz.supabase.co" class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-zinc-200 focus:border-red-600 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Supabase Anon Key</label>
+                    <input type="password" id="input-supabase-key" placeholder="eyJhbGciOi..." class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-zinc-200 focus:border-red-600 focus:outline-none">
+                </div>
+
+                <div class="pt-2 flex gap-2">
+                    <button type="button" id="btn-reload-config" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition border border-zinc-700">
+                        Reload config.json
+                    </button>
+                    <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-2 shadow transition">
+                        Save to localStorage
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 max-w-md bg-zinc-900 text-white border border-zinc-800 px-4 py-3 shadow-2xl flex items-center space-x-3 pointer-events-none tech-box">
+        <i id="toast-icon" data-lucide="info" class="w-5 h-5 text-red-500"></i>
+        <p id="toast-msg" class="text-xs font-medium"></p>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Application State
+        let appState = {
+            configLoadedFromFile: false,
+            geminiKey: '',
+            supabaseUrl: '',
+            supabaseKey: '',
+            supabaseClient: null,
+            currentImageBase64: null,
+            meterHistory: [],
+            chartInstance: null
+        };
+
+        // DOM Loaded Init
+        window.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            initChart();
+            setupEventListeners();
+            
+            await loadConfigFromFile();
+            
+            if (appState.supabaseClient) {
+                fetchMeterReadings();
+            }
+        });
+
+        // Load Settings from config.json
+        async function loadConfigFromFile() {
+            const badge = document.getElementById('config-status-badge');
+            const warningBanner = document.getElementById('banner-config-warning');
+
+            try {
+                const response = await fetch('./config.json', { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP status ${response.status}`);
+
+                const config = await response.json();
+                if (!config.GEMINI_API_KEY || !config.SUPABASE_URL || !config.SUPABASE_ANON_KEY) {
+                    throw new Error('Missing keys in config.json');
+                }
+
+                appState.geminiKey = config.GEMINI_API_KEY;
+                appState.supabaseUrl = config.SUPABASE_URL;
+                appState.supabaseKey = config.SUPABASE_ANON_KEY;
+                appState.configLoadedFromFile = true;
+
+                badge.className = 'inline-flex items-center px-2.5 py-1 text-[11px] font-medium bg-red-950/60 text-red-400 border border-red-800/60';
+                badge.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 mr-1.5 text-red-500"></i> Loaded config.json`;
+                warningBanner.classList.add('hidden');
+
+                initSupabaseClient();
+                showToast('Config loaded successfully (โหลดการตั้งค่าสำเร็จ)', 'success');
+
+            } catch (error) {
+                console.warn('config.json load error:', error.message);
+                
+                appState.configLoadedFromFile = false;
+                appState.geminiKey = localStorage.getItem('gemini_api_key') || '';
+                appState.supabaseUrl = localStorage.getItem('supabase_url') || '';
+                appState.supabaseKey = localStorage.getItem('supabase_anon_key') || '';
+
+                badge.className = 'inline-flex items-center px-2.5 py-1 text-[11px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700';
+                badge.innerHTML = `<i data-lucide="alert-circle" class="w-3.5 h-3.5 mr-1.5 text-zinc-400"></i> Manual Config`;
+                
+                warningBanner.classList.remove('hidden');
+                initSupabaseClient();
+            }
+
+            lucide.createIcons();
+            populateSettingsInputs();
+        }
+
+        function initSupabaseClient() {
+            if (appState.supabaseUrl && appState.supabaseKey) {
+                try {
+                    appState.supabaseClient = supabase.createClient(appState.supabaseUrl, appState.supabaseKey);
+                } catch (e) {
+                    console.error("Supabase Init Error:", e);
+                }
+            }
+        }
+
+        function populateSettingsInputs() {
+            document.getElementById('input-gemini-key').value = appState.geminiKey;
+            document.getElementById('input-supabase-url').value = appState.supabaseUrl;
+            document.getElementById('input-supabase-key').value = appState.supabaseKey;
+        }
+
+        function setupEventListeners() {
+            const inputFile = document.getElementById('input-file');
+            const dropZone = document.getElementById('drop-zone');
+            const btnRemoveImg = document.getElementById('btn-remove-img');
+
+            document.getElementById('btn-open-config-modal').addEventListener('click', openConfigModal);
+            document.getElementById('btn-open-settings').addEventListener('click', openSettingsModal);
+            document.getElementById('form-settings').addEventListener('submit', handleSaveManualSettings);
+            document.getElementById('btn-reload-config').addEventListener('click', () => {
+                loadConfigFromFile();
+                closeSettingsModal();
+            });
+
+            document.getElementById('btn-copy-config').addEventListener('click', copyConfigJson);
+            document.getElementById('btn-copy-sql').addEventListener('click', copySqlScript);
+
+            inputFile.addEventListener('change', handleFileSelect);
+            btnRemoveImg.addEventListener('click', resetImageUpload);
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('border-red-600', 'bg-red-950/20');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('border-red-600', 'bg-red-950/20');
+                });
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    inputFile.files = files;
+                    handleFileSelect();
+                }
+            });
+
+            document.getElementById('btn-scan').addEventListener('click', processAndAutoSave);
+            document.getElementById('form-meter-result').addEventListener('submit', handleSaveOrUpdate);
+            document.getElementById('btn-cancel-edit').addEventListener('click', resetFormToCreateMode);
+            document.getElementById('btn-refresh').addEventListener('click', fetchMeterReadings);
+
+            document.getElementById('search-input').addEventListener('input', renderTableRows);
+            document.getElementById('filter-type').addEventListener('change', renderTableRows);
+        }
+
+        function handleFileSelect() {
+            const file = document.getElementById('input-file').files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showToast('Please select an image file (โปรดเลือกไฟล์รูปภาพเท่านั้น)', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                appState.currentImageBase64 = e.target.result;
+                document.getElementById('img-preview').src = e.target.result;
+                document.getElementById('img-preview').classList.remove('hidden');
+                document.getElementById('btn-remove-img').classList.remove('hidden');
+                document.getElementById('upload-placeholder').classList.add('hidden');
+                document.getElementById('btn-scan').disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetImageUpload(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('input-file').value = '';
+            appState.currentImageBase64 = null;
+            document.getElementById('img-preview').src = '';
+            document.getElementById('img-preview').classList.add('hidden');
+            document.getElementById('btn-remove-img').classList.add('hidden');
+            document.getElementById('upload-placeholder').classList.remove('hidden');
+            document.getElementById('btn-scan').disabled = true;
+
+            resetFormToCreateMode();
+        }
+
+        // Process Image with Gemini API and AUTO-SAVE
+        async function processAndAutoSave() {
+            if (!appState.geminiKey) {
+                showToast('Missing Gemini API Key (ไม่พบ Gemini API Key)', 'error');
+                openSettingsModal();
+                return;
+            }
+
+            if (!appState.currentImageBase64) return;
+
+            // Show cool scanning effects
+            document.getElementById('scan-effect').classList.remove('hidden');
+            document.getElementById('scan-grid').classList.remove('hidden');
+            document.getElementById('ai-empty-state').classList.add('hidden');
+            document.getElementById('form-meter-result').classList.add('hidden');
+            document.getElementById('ai-loading').classList.remove('hidden');
+            document.getElementById('btn-scan').disabled = true;
+
+            try {
+                const base64Data = appState.currentImageBase64.split(',')[1];
+                const mimeType = appState.currentImageBase64.split(';')[0].split(':')[1];
+
+                const prompt = `Analyze this image of a utility meter (electricity or water meter). 
+Extract the details and return ONLY a valid JSON object matching this structure:
+{
+  "meter_type": "Electricity" or "Water",
+  "reading_value": numerical value on dial/digits (number),
+  "serial_number": "meter serial number string if visible, else null",
+  "confidence": "High" or "Medium" or "Low",
+  "notes": "Short description in Thai language"
+}`;
+
+                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${appState.geminiKey}`;
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                { text: prompt },
+                                { inline_data: { mime_type: mimeType, data: base64Data } }
+                            ]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error?.message || 'Gemini API Error');
+                }
+
+                const result = await response.json();
+                const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!aiText) throw new Error('No response content from AI');
+
+                const cleanedJson = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+                const parsed = JSON.parse(cleanedJson);
+
+                // Fill Form Data
+                document.getElementById('result-type').value = (parsed.meter_type === 'Water') ? 'Water' : 'Electricity';
+                document.getElementById('result-reading').value = parsed.reading_value !== undefined ? parsed.reading_value : '';
+                document.getElementById('result-serial').value = parsed.serial_number || '';
+                document.getElementById('result-confidence').value = parsed.confidence || 'Medium';
+                document.getElementById('result-notes').value = parsed.notes || 'อ่านค่าสำเร็จโดย Gemini AI';
+
+                // Automatically Save to Supabase
+                await autoSaveToSupabase({
+                    meter_type: document.getElementById('result-type').value,
+                    reading_value: parseFloat(document.getElementById('result-reading').value),
+                    serial_number: document.getElementById('result-serial').value || null,
+                    confidence: document.getElementById('result-confidence').value,
+                    notes: document.getElementById('result-notes').value,
+                    image_url: appState.currentImageBase64
+                });
+
+                document.getElementById('ai-loading').classList.add('hidden');
+                document.getElementById('form-meter-result').classList.remove('hidden');
+
+                const badge = document.getElementById('ai-status-badge');
+                badge.textContent = `Confidence: ${parsed.confidence || 'Medium'}`;
+                badge.className = 'text-[10px] font-medium px-2 py-0.5 bg-red-950 text-red-400 border border-red-800';
+                badge.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Scan & Save Error:", error);
+                document.getElementById('ai-loading').classList.add('hidden');
+                document.getElementById('ai-empty-state').classList.remove('hidden');
+                showToast(`Process failed: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('scan-effect').classList.add('hidden');
+                document.getElementById('scan-grid').classList.add('hidden');
+                document.getElementById('btn-scan').disabled = false;
+            }
+        }
+
+        // Auto Save Handler
+        async function autoSaveToSupabase(payload) {
+            if (!appState.supabaseClient) return;
+
+            const { data, error } = await appState.supabaseClient
+                .from('meter_readings')
+                .insert([payload]);
+
+            if (error) {
+                showToast(`Auto-save failed: ${error.message}`, 'error');
+            } else {
+                showToast('สแกนและบันทึกลง Supabase สำเร็จ!', 'success');
+                fetchMeterReadings();
+            }
+        }
+
+        // Manual Save OR Edit/Update existing record
+        async function handleSaveOrUpdate(e) {
+            e.preventDefault();
+            if (!appState.supabaseClient) return;
+
+            const recordId = document.getElementById('editing-record-id').value;
+            const btnSave = document.getElementById('btn-save-db');
+            btnSave.disabled = true;
+
+            const payload = {
+                meter_type: document.getElementById('result-type').value,
+                reading_value: parseFloat(document.getElementById('result-reading').value),
+                serial_number: document.getElementById('result-serial').value || null,
+                confidence: document.getElementById('result-confidence').value,
+                notes: document.getElementById('result-notes').value
+            };
+
+            try {
+                if (recordId) {
+                    // Update existing record (แก้ไขทับ)
+                    const { error } = await appState.supabaseClient
+                        .from('meter_readings')
+                        .update(payload)
+                        .eq('id', recordId);
+
+                    if (error) throw error;
+                    showToast('แก้ไขข้อมูลเรียบร้อยแล้ว! (Record Updated)', 'success');
+                } else {
+                    // Create new record
+                    if (appState.currentImageBase64) payload.image_url = appState.currentImageBase64;
+                    const { error } = await appState.supabaseClient
+                        .from('meter_readings')
+                        .insert([payload]);
+
+                    if (error) throw error;
+                    showToast('บันทึกข้อมูลเรียบร้อยแล้ว!', 'success');
+                }
+
+                resetFormToCreateMode();
+                fetchMeterReadings();
+
+            } catch (error) {
+                showToast(`Save failed: ${error.message}`, 'error');
+            } finally {
+                btnSave.disabled = false;
+            }
+        }
+
+        // Load Record Into Form to Edit (กดแก้ไขทับ)
+        function editRecord(id) {
+            const item = appState.meterHistory.find(m => m.id === id);
+            if (!item) return;
+
+            document.getElementById('editing-record-id').value = item.id;
+            document.getElementById('result-type').value = item.meter_type;
+            document.getElementById('result-reading').value = item.reading_value;
+            document.getElementById('result-serial').value = item.serial_number || '';
+            document.getElementById('result-confidence').value = item.confidence || 'Manual Edit';
+            document.getElementById('result-notes').value = item.notes || '';
+
+            // Update UI for Edit mode
+            document.getElementById('form-mode-title').textContent = 'Edit Record (แก้ไขข้อมูล)';
+            document.getElementById('edit-mode-badge').classList.remove('hidden');
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            document.getElementById('btn-save-label').textContent = 'Update Record (บันทึกทับ)';
+
+            document.getElementById('ai-empty-state').classList.add('hidden');
+            document.getElementById('form-meter-result').classList.remove('hidden');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetFormToCreateMode() {
+            document.getElementById('editing-record-id').value = '';
+            document.getElementById('form-mode-title').textContent = 'AI Result & Save (ผลลัพธ์)';
+            document.getElementById('edit-mode-badge').classList.add('hidden');
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+            document.getElementById('btn-save-label').textContent = 'Save Record (บันทึก)';
+
+            document.getElementById('form-meter-result').classList.add('hidden');
+            document.getElementById('ai-empty-state').classList.remove('hidden');
+            document.getElementById('ai-status-badge').classList.add('hidden');
+        }
+
+        // Fetch History
+        async function fetchMeterReadings() {
+            if (!appState.supabaseClient) return;
+
+            const tbody = document.getElementById('table-meter-rows');
+            tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-zinc-500">Loading records...</td></tr>`;
+
+            try {
+                const { data, error } = await appState.supabaseClient
+                    .from('meter_readings')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                appState.meterHistory = data || [];
+                updateDashboardStats();
+                renderTableRows();
+                updateChart();
+
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-red-500">Failed to load data (${error.message})</td></tr>`;
+            }
+        }
+
+        // Render Table
+        function renderTableRows() {
+            const tbody = document.getElementById('table-meter-rows');
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const filterType = document.getElementById('filter-type').value;
+
+            const filtered = appState.meterHistory.filter(item => {
+                const matchType = filterType === 'ALL' || item.meter_type === filterType;
+                const matchSearch = (item.serial_number || '').toLowerCase().includes(search) ||
+                                    (item.notes || '').toLowerCase().includes(search) ||
+                                    item.reading_value.toString().includes(search);
+                return matchType && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-zinc-500">No records found (ไม่พบข้อมูล)</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(item => {
+                const dateStr = new Date(item.created_at).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
+                let badgeColor = 'bg-zinc-800 text-zinc-300 border-zinc-700';
+                if (item.meter_type === 'Electricity') badgeColor = 'bg-red-950/60 text-red-400 border-red-800/60';
+                if (item.meter_type === 'Water') badgeColor = 'bg-zinc-800 text-zinc-300 border-zinc-700';
+
+                return `
+                    <tr class="hover:bg-zinc-900/50 transition">
+                        <td class="py-2.5 px-3 text-zinc-400">${dateStr}</td>
+                        <td class="py-2.5 px-3">
+                            <span class="px-2 py-0.5 text-[10px] font-semibold border ${badgeColor}">
+                                ${item.meter_type}
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-3 font-bold text-white">${item.reading_value.toLocaleString()}</td>
+                        <td class="py-2.5 px-3 font-mono text-zinc-400">${item.serial_number || '-'}</td>
+                        <td class="py-2.5 px-3 text-zinc-400 max-w-[120px] truncate" title="${item.notes || ''}">${item.notes || '-'}</td>
+                        <td class="py-2.5 px-3 text-right space-x-1">
+                            <button onclick="editRecord('${item.id}')" class="text-zinc-400 hover:text-amber-400 p-1 transition" title="Edit (แก้ไขทับ)">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteRecord('${item.id}')" class="text-zinc-500 hover:text-red-500 p-1 transition" title="Delete">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        async function deleteRecord(id) {
+            if (!confirm('Confirm deletion? (ต้องการลบรายการนี้ใช่หรือไม่?)')) return;
+            try {
+                const { error } = await appState.supabaseClient.from('meter_readings').delete().eq('id', id);
+                if (error) throw error;
+                showToast('Record deleted (ลบรายการเรียบร้อย)', 'success');
+                fetchMeterReadings();
+            } catch (error) {
+                showToast(`Delete failed: ${error.message}`, 'error');
+            }
+        }
+
+        function updateDashboardStats() {
+            document.getElementById('stat-total').textContent = appState.meterHistory.length;
+            const latestElec = appState.meterHistory.find(m => m.meter_type === 'Electricity');
+            const latestWater = appState.meterHistory.find(m => m.meter_type === 'Water');
+
+            document.getElementById('stat-electricity').textContent = latestElec ? `${latestElec.reading_value.toLocaleString()} kWh` : '-';
+            document.getElementById('stat-water').textContent = latestWater ? `${latestWater.reading_value.toLocaleString()} m³` : '-';
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('meterChart').getContext('2d');
+            appState.chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Electricity', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', fill: true, tension: 0 },
+                        { label: 'Water', data: [], borderColor: '#e4e4e7', backgroundColor: 'rgba(228, 228, 231, 0.05)', fill: true, tension: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { 
+                        y: { 
+                            beginAtZero: false,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#a1a1aa' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#a1a1aa' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#f4f4f5' } }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            if (!appState.chartInstance) return;
+            const sorted = [...appState.meterHistory].reverse();
+            const labels = sorted.map(item => new Date(item.created_at).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }));
+            
+            appState.chartInstance.data.labels = labels;
+            appState.chartInstance.data.datasets[0].data = sorted.map(i => i.meter_type === 'Electricity' ? i.reading_value : null);
+            appState.chartInstance.data.datasets[1].data = sorted.map(i => i.meter_type === 'Water' ? i.reading_value : null);
+            appState.chartInstance.update();
+        }
+
+        function openConfigModal() { document.getElementById('modal-config').classList.remove('hidden'); }
+        function closeConfigModal() { document.getElementById('modal-config').classList.add('hidden'); }
+        function openSettingsModal() { document.getElementById('modal-settings').classList.remove('hidden'); }
+        function closeSettingsModal() { document.getElementById('modal-settings').classList.add('hidden'); }
+
+        function handleSaveManualSettings(e) {
+            e.preventDefault();
+            const gKey = document.getElementById('input-gemini-key').value.trim();
+            const sUrl = document.getElementById('input-supabase-url').value.trim();
+            const sKey = document.getElementById('input-supabase-key').value.trim();
+
+            localStorage.setItem('gemini_api_key', gKey);
+            localStorage.setItem('supabase_url', sUrl);
+            localStorage.setItem('supabase_anon_key', sKey);
+
+            appState.geminiKey = gKey;
+            appState.supabaseUrl = sUrl;
+            appState.supabaseKey = sKey;
+
+            initSupabaseClient();
+            closeSettingsModal();
+            showToast('Settings saved to localStorage', 'success');
+
+            if (appState.supabaseClient) fetchMeterReadings();
+        }
+
+        function copyConfigJson() {
+            const code = document.getElementById('config-code-block').innerText;
+            copyTextToClipboard(code, 'JSON format copied');
+        }
+
+        function copySqlScript() {
+            const sql = `create table if not exists public.meter_readings (
+  id uuid default gen_random_uuid() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  meter_type text not null,
+  reading_value numeric not null,
+  serial_number text,
+  confidence text,
+  image_url text,
+  notes text
+);
+alter table public.meter_readings enable row level security;
+create policy "Public Meter Readings" on public.meter_readings for all using (true) with check (true);`;
+            copyTextToClipboard(sql, 'SQL script copied');
+        }
+
+        function copyTextToClipboard(text, successMsg) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showToast(successMsg, 'success');
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.textContent = message;
+            toastIcon.setAttribute('data-lucide', type === 'success' ? 'check-circle' : type === 'error' ? 'alert-circle' : 'info');
+            toastIcon.className = `w-5 h-5 ${type === 'success' ? 'text-red-500' : type === 'error' ? 'text-red-400' : 'text-zinc-400'}`;
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
