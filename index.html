@@ -41,7 +41,6 @@
     <style>
         body { font-family: 'Prompt', sans-serif; }
 
-        /* Soft Card UI Component */
         .tech-box {
             position: relative;
             background-color: #ffffff;
@@ -50,7 +49,6 @@
             box-shadow: 0 1px 2px rgba(10, 20, 38, 0.04), 0 8px 24px -12px rgba(10, 20, 38, 0.12);
         }
 
-        /* Scan Animation Effect */
         @keyframes scanLaser {
             0% { top: 0%; opacity: 0.7; }
             50% { top: 95%; opacity: 1; }
@@ -67,7 +65,6 @@
             z-index: 20;
         }
 
-        /* Scrollbar */
         ::-webkit-scrollbar { height: 8px; width: 8px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -89,15 +86,11 @@
 
                 <!-- Status Badges & Controls -->
                 <div class="flex items-center space-x-2 sm:space-x-3">
-                    <div id="config-status-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
-                        <i data-lucide="loader-2" class="w-3 h-3 animate-spin mr-1.5"></i>
-                        <span>Loading config...</span>
+                    <div id="config-status-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-brand-50 text-brand-700 border border-brand-100">
+                        <i data-lucide="database" class="w-3.5 h-3.5 mr-1.5 text-brand-600"></i>
+                        <span>localStorage</span>
                     </div>
 
-                    <button id="btn-open-config-modal" class="inline-flex items-center space-x-1 text-xs bg-white hover:bg-slate-50 text-slate-600 p-2 sm:py-2 sm:px-3 rounded-lg border border-slate-200 transition">
-                        <i data-lucide="file-json" class="w-4 h-4 text-brand-600"></i>
-                        <span class="hidden md:inline">Config Format</span>
-                    </button>
                     <button id="btn-open-settings" class="inline-flex items-center space-x-1.5 text-xs bg-brand-600 hover:bg-brand-700 text-white font-medium p-2 sm:py-2 sm:px-3.5 rounded-lg shadow-sm shadow-brand-600/20 transition">
                         <i data-lucide="settings" class="w-4 h-4"></i>
                         <span class="hidden md:inline">Settings</span>
@@ -109,15 +102,6 @@
 
     <!-- Main Content Layout -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-7 space-y-5 sm:space-y-6">
-
-        <!-- Config Error / Fallback Banner -->
-        <div id="banner-config-warning" class="hidden bg-amber-50 border-l-4 border-amber-400 rounded-r-xl p-3 sm:p-4 shadow-sm flex items-start space-x-3">
-            <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5"></i>
-            <div class="flex-1 text-xs text-amber-800 leading-relaxed">
-                <p class="font-semibold">config.json not found</p>
-                <p class="mt-0.5">Using fallback settings from <strong class="underline cursor-pointer text-amber-900" onclick="openSettingsModal()">localStorage</strong>.</p>
-            </div>
-        </div>
 
         <!-- Metric Stat Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -154,7 +138,6 @@
                 </div>
 
                 <div id="drop-zone" class="relative flex-1 min-h-[220px] sm:min-h-[250px] rounded-xl border-2 border-dashed border-slate-200 hover:border-brand-400 p-4 flex flex-col items-center justify-center text-center bg-slate-50/70 transition cursor-pointer group overflow-hidden">
-                    <!-- Scanner Laser Overlay -->
                     <div id="scan-effect" class="hidden scan-line"></div>
                     <div id="scan-grid" class="hidden absolute inset-0 bg-[radial-gradient(#1e3a6e_1px,transparent_1px)] [background-size:16px_16px] opacity-15 pointer-events-none"></div>
 
@@ -297,43 +280,7 @@
         </div>
     </main>
 
-    <!-- Config JSON Helper Modal -->
-    <div id="modal-config" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="tech-box max-w-xl w-full p-5 sm:p-6 shadow-2xl relative bg-white">
-            <button onclick="closeConfigModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-            <div class="flex items-center space-x-2 text-brand-600 mb-3">
-                <i data-lucide="file-json" class="w-5 h-5"></i>
-                <h3 class="text-base sm:text-lg font-bold text-slate-900">config.json Format</h3>
-            </div>
-            <p class="text-xs text-slate-500 mb-3">Place <code class="bg-slate-100 text-brand-700 px-1.5 py-0.5 rounded font-mono">config.json</code> in the same directory:</p>
-
-            <div class="relative">
-                <pre class="bg-slate-50 text-slate-700 p-4 rounded-xl text-xs overflow-x-auto font-mono leading-relaxed border border-slate-200" id="config-code-block">{
-  "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY_HERE",
-  "SUPABASE_URL": "YOUR_SUPABASE_URL_HERE",
-  "SUPABASE_ANON_KEY": "YOUR_SUPABASE_ANON_KEY_HERE"
-}</pre>
-                <button id="btn-copy-config" class="absolute top-3 right-3 bg-white hover:bg-slate-50 text-slate-600 text-xs px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 border border-slate-200 shadow-sm">
-                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                    <span>Copy JSON</span>
-                </button>
-            </div>
-
-            <hr class="my-4 border-slate-100">
-
-            <div class="flex items-center justify-between">
-                <span class="text-xs text-slate-500">Need Supabase SQL script?</span>
-                <button id="btn-copy-sql" class="text-xs text-brand-600 hover:underline font-medium flex items-center gap-1">
-                    <i data-lucide="database" class="w-3.5 h-3.5"></i>
-                    <span>Copy Table SQL</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Manual Settings Fallback Modal -->
+    <!-- Manual Settings Modal -->
     <div id="modal-settings" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="tech-box max-w-lg w-full p-5 sm:p-6 shadow-2xl relative bg-white">
             <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition">
@@ -341,7 +288,7 @@
             </button>
             <div class="flex items-center space-x-2 text-brand-600 mb-4">
                 <i data-lucide="sliders" class="w-5 h-5"></i>
-                <h3 class="text-base sm:text-lg font-bold text-slate-900">Fallback Settings</h3>
+                <h3 class="text-base sm:text-lg font-bold text-slate-900">Settings (localStorage)</h3>
             </div>
 
             <form id="form-settings" class="space-y-3 sm:space-y-4">
@@ -360,11 +307,8 @@
                     <input type="password" id="input-supabase-key" placeholder="eyJhbGciOi..." class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none transition">
                 </div>
 
-                <div class="pt-2 flex gap-2">
-                    <button type="button" id="btn-reload-config" class="px-3 py-2 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium rounded-lg transition border border-slate-200">
-                        Reload config.json
-                    </button>
-                    <button type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium py-2 rounded-lg shadow-sm transition">
+                <div class="pt-2 flex justify-end">
+                    <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium py-2 rounded-lg shadow-sm transition">
                         Save to localStorage
                     </button>
                 </div>
@@ -378,7 +322,7 @@
         <p id="toast-msg" class="text-xs font-medium"></p>
     </div>
 
-    <!-- JavaScript Application Logic -->
+    <!-- Application Logic -->
     <script>
         const DECIMAL_RULES = {
             Electricity: 1,
@@ -386,7 +330,6 @@
         };
 
         let appState = {
-            configLoadedFromFile: false,
             geminiKey: '',
             supabaseUrl: '',
             supabaseKey: '',
@@ -395,16 +338,40 @@
             meterHistory: []
         };
 
-        window.addEventListener('DOMContentLoaded', async () => {
+        window.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             setupEventListeners();
-
-            await loadConfigFromFile();
+            loadSettingsFromLocalStorage();
 
             if (appState.supabaseClient) {
                 fetchMeterReadings();
             }
         });
+
+        function loadSettingsFromLocalStorage() {
+            const defaultGeminiKey = "AQ.Ab8RN6K5l9EKJjrS5jG5Edt0ZgSdj6H0hnV1KkV1nYKk7Y9_3A";
+            const defaultSupabaseUrl = "https://unyjdidrylosuzfymthh.supabase.co";
+            const defaultSupabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVueWpkaWRyeWxvc3V6ZnltdGhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3MjkyMDksImV4cCI6MjEwNTMwNTIwOX0.yx_F8cvfxs3bxBE3EhmWNSzta-3bhcsZL5M_dnuqhdg";
+
+            // ถ้าไม่มีค่าใน localStorage ให้บันทึกค่าเริ่มต้นเข้าไปทันที
+            if (!localStorage.getItem('gemini_api_key')) {
+                localStorage.setItem('gemini_api_key', defaultGeminiKey);
+            }
+            if (!localStorage.getItem('supabase_url')) {
+                localStorage.setItem('supabase_url', defaultSupabaseUrl);
+            }
+            if (!localStorage.getItem('supabase_anon_key')) {
+                localStorage.setItem('supabase_anon_key', defaultSupabaseKey);
+            }
+
+            // ดึงค่าจาก localStorage มาใช้งาน
+            appState.geminiKey = localStorage.getItem('gemini_api_key');
+            appState.supabaseUrl = localStorage.getItem('supabase_url');
+            appState.supabaseKey = localStorage.getItem('supabase_anon_key');
+
+            initSupabaseClient();
+            populateSettingsInputs();
+        }
 
         function applyDecimalRule(rawValue, meterType) {
             if (rawValue === null || rawValue === undefined || rawValue === '') return '';
@@ -442,50 +409,6 @@
             updateDecimalRuleHint();
         }
 
-        async function loadConfigFromFile() {
-            const badge = document.getElementById('config-status-badge');
-            const warningBanner = document.getElementById('banner-config-warning');
-
-            try {
-                const response = await fetch('./config.json', { cache: 'no-store' });
-                if (!response.ok) throw new Error(`HTTP status ${response.status}`);
-
-                const config = await response.json();
-                if (!config.GEMINI_API_KEY || !config.SUPABASE_URL || !config.SUPABASE_ANON_KEY) {
-                    throw new Error('Missing keys in config.json');
-                }
-
-                appState.geminiKey = config.GEMINI_API_KEY;
-                appState.supabaseUrl = config.SUPABASE_URL;
-                appState.supabaseKey = config.SUPABASE_ANON_KEY;
-                appState.configLoadedFromFile = true;
-
-                badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-brand-50 text-brand-700 border border-brand-100';
-                badge.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 mr-1.5 text-brand-600"></i> Loaded config.json`;
-                warningBanner.classList.add('hidden');
-
-                initSupabaseClient();
-                showToast('Config loaded successfully', 'success');
-
-            } catch (error) {
-                console.warn('config.json load error:', error.message);
-
-                appState.configLoadedFromFile = false;
-                appState.geminiKey = localStorage.getItem('gemini_api_key') || '';
-                appState.supabaseUrl = localStorage.getItem('supabase_url') || '';
-                appState.supabaseKey = localStorage.getItem('supabase_anon_key') || '';
-
-                badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200';
-                badge.innerHTML = `<i data-lucide="alert-circle" class="w-3.5 h-3.5 mr-1.5 text-slate-400"></i> Manual Config`;
-
-                warningBanner.classList.remove('hidden');
-                initSupabaseClient();
-            }
-
-            lucide.createIcons();
-            populateSettingsInputs();
-        }
-
         function initSupabaseClient() {
             if (appState.supabaseUrl && appState.supabaseKey) {
                 try {
@@ -499,9 +422,9 @@
         }
 
         function populateSettingsInputs() {
-            document.getElementById('input-gemini-key').value = appState.geminiKey;
-            document.getElementById('input-supabase-url').value = appState.supabaseUrl;
-            document.getElementById('input-supabase-key').value = appState.supabaseKey;
+            document.getElementById('input-gemini-key').value = appState.geminiKey || '';
+            document.getElementById('input-supabase-url').value = appState.supabaseUrl || '';
+            document.getElementById('input-supabase-key').value = appState.supabaseKey || '';
         }
 
         function setupEventListeners() {
@@ -509,16 +432,8 @@
             const dropZone = document.getElementById('drop-zone');
             const btnRemoveImg = document.getElementById('btn-remove-img');
 
-            document.getElementById('btn-open-config-modal').addEventListener('click', openConfigModal);
             document.getElementById('btn-open-settings').addEventListener('click', openSettingsModal);
             document.getElementById('form-settings').addEventListener('submit', handleSaveManualSettings);
-            document.getElementById('btn-reload-config').addEventListener('click', () => {
-                loadConfigFromFile();
-                closeSettingsModal();
-            });
-
-            document.getElementById('btn-copy-config').addEventListener('click', copyConfigJson);
-            document.getElementById('btn-copy-sql').addEventListener('click', copySqlScript);
 
             inputFile.addEventListener('change', handleFileSelect);
             btnRemoveImg.addEventListener('click', resetImageUpload);
@@ -778,7 +693,6 @@ Do not insert any decimal point yourself. Return the digits exactly as printed o
             tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">Loading records...</td></tr>`;
 
             try {
-                // ดึงเฉพาะ 5 ตัวล่าสุดเท่านั้น ป้องกัน timeout และแสดงผลกระชับ
                 const { data, error } = await appState.supabaseClient
                     .from('meter_readings')
                     .select('*')
@@ -874,8 +788,6 @@ Do not insert any decimal point yourself. Return the digits exactly as printed o
             document.getElementById('stat-water').textContent = latestWater ? `${formatReadingDisplay(latestWater.reading_value, 'Water')} m³` : '-';
         }
 
-        function openConfigModal() { document.getElementById('modal-config').classList.remove('hidden'); }
-        function closeConfigModal() { document.getElementById('modal-config').classList.add('hidden'); }
         function openSettingsModal() { document.getElementById('modal-settings').classList.remove('hidden'); }
         function closeSettingsModal() { document.getElementById('modal-settings').classList.add('hidden'); }
 
@@ -898,36 +810,6 @@ Do not insert any decimal point yourself. Return the digits exactly as printed o
             showToast('Settings saved to localStorage', 'success');
 
             if (appState.supabaseClient) fetchMeterReadings();
-        }
-
-        function copyConfigJson() {
-            const code = document.getElementById('config-code-block').innerText;
-            copyTextToClipboard(code, 'JSON format copied');
-        }
-
-        function copySqlScript() {
-            const sql = `create table if not exists public.meter_readings (
-  id uuid default gen_random_uuid() primary key,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  meter_type text not null,
-  reading_value numeric not null,
-  serial_number text,
-  image_url text,
-  notes text
-);
-alter table public.meter_readings enable row level security;
-create policy "Public Meter Readings" on public.meter_readings for all using (true) with check (true);`;
-            copyTextToClipboard(sql, 'SQL script copied');
-        }
-
-        function copyTextToClipboard(text, successMsg) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            showToast(successMsg, 'success');
         }
 
         function showToast(message, type = 'info') {
