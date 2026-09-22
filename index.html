@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-zinc-950">
+<html lang="en" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI METER READER</title>
+    <title>METER READER</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts Prompt -->
@@ -12,11 +12,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+
     <script>
         tailwind.config = {
             theme: {
@@ -25,10 +23,15 @@
                         sans: ['Prompt', 'sans-serif'],
                     },
                     colors: {
-                        crimson: {
-                            500: '#ef4444',
-                            600: '#dc2626',
-                            700: '#b91c1c',
+                        brand: {
+                            50: '#eef2f9',
+                            100: '#dbe3f2',
+                            200: '#b6c6e4',
+                            400: '#3b5c96',
+                            500: '#1e3a6e',
+                            600: '#173058',
+                            700: '#102243',
+                            900: '#0a1426',
                         }
                     }
                 }
@@ -37,81 +40,67 @@
     </script>
     <style>
         body { font-family: 'Prompt', sans-serif; }
-        
-        /* Custom Corner Corners UI Component (กรอบสี่เหลี่ยมสีแดงแบบในภาพ) */
+
+        /* Soft Card UI Component */
         .tech-box {
             position: relative;
-            background-color: rgba(24, 24, 27, 0.8);
-            border: 1px solid rgba(39, 39, 42, 0.8);
-        }
-        .tech-box::before, .tech-box::after {
-            content: '';
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            pointer-events: none;
-            z-index: 10;
-        }
-        .tech-box::before {
-            top: -1px;
-            left: -1px;
-            border-top: 2px solid #ef4444;
-            border-left: 2px solid #ef4444;
-        }
-        .tech-box::after {
-            bottom: -1px;
-            right: -1px;
-            border-bottom: 2px solid #ef4444;
-            border-right: 2px solid #ef4444;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            box-shadow: 0 1px 2px rgba(10, 20, 38, 0.04), 0 8px 24px -12px rgba(10, 20, 38, 0.12);
         }
 
         /* Scan Animation Effect */
         @keyframes scanLaser {
-            0% { top: 0%; opacity: 0.8; }
+            0% { top: 0%; opacity: 0.7; }
             50% { top: 95%; opacity: 1; }
-            100% { top: 0%; opacity: 0.8; }
+            100% { top: 0%; opacity: 0.7; }
         }
         .scan-line {
             position: absolute;
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, transparent, #ef4444, #ff8888, #ef4444, transparent);
-            box-shadow: 0 0 15px #ef4444, 0 0 30px #ef4444;
+            background: linear-gradient(90deg, transparent, #1e3a6e, #b6c6e4, #1e3a6e, transparent);
+            box-shadow: 0 0 12px rgba(30, 58, 110, 0.55);
             animation: scanLaser 1.8s ease-in-out infinite;
             z-index: 20;
         }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { height: 8px; width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
     </style>
 </head>
-<body class="h-full text-zinc-100 flex flex-col min-h-screen bg-zinc-950 selection:bg-red-600 selection:text-white">
+<body class="h-full text-slate-700 flex flex-col min-h-screen bg-slate-50 selection:bg-brand-200 selection:text-brand-700">
     <!-- Header Navbar -->
-    <header class="bg-zinc-900/90 backdrop-blur-md border-b border-red-950/40 sticky top-0 z-40">
+    <header class="bg-white/85 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center space-x-3">
-                    <div class="bg-red-600 p-2 text-white shadow-lg shadow-red-900/50">
+                    <div class="bg-brand-600 p-2 rounded-xl text-white shadow-md shadow-brand-600/20">
                         <i data-lucide="gauge" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h1 class="font-bold text-base sm:text-lg tracking-wide uppercase text-white">AI METER READER</h1>
-                        <p class="text-[10px] text-zinc-400">AUTOMATED SYSTEM (ระบบอัตโนมัติ)</p>
+                        <h1 class="font-semibold text-base sm:text-lg tracking-wide uppercase text-slate-900">METER READER</h1>
                     </div>
                 </div>
 
                 <!-- Status Badges & Controls -->
                 <div class="flex items-center space-x-2 sm:space-x-3">
-                    <div id="config-status-badge" class="inline-flex items-center px-2.5 py-1 text-[11px] font-medium bg-red-950/40 text-red-400 border border-red-800/40">
+                    <div id="config-status-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
                         <i data-lucide="loader-2" class="w-3 h-3 animate-spin mr-1.5"></i>
                         <span>Loading config...</span>
                     </div>
 
-                    <button id="btn-open-config-modal" class="inline-flex items-center space-x-1 text-xs bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 p-2 sm:py-2 sm:px-3 border border-zinc-700/60 transition">
-                        <i data-lucide="file-json" class="w-4 h-4 text-red-400"></i>
+                    <button id="btn-open-config-modal" class="inline-flex items-center space-x-1 text-xs bg-white hover:bg-slate-50 text-slate-600 p-2 sm:py-2 sm:px-3 rounded-lg border border-slate-200 transition">
+                        <i data-lucide="file-json" class="w-4 h-4 text-brand-600"></i>
                         <span class="hidden md:inline">Config Format</span>
                     </button>
-                    <button id="btn-open-settings" class="inline-flex items-center space-x-1.5 text-xs bg-red-600 hover:bg-red-700 text-white font-medium p-2 sm:py-2 sm:px-3.5 shadow-lg shadow-red-950/50 transition">
+                    <button id="btn-open-settings" class="inline-flex items-center space-x-1.5 text-xs bg-brand-600 hover:bg-brand-700 text-white font-medium p-2 sm:py-2 sm:px-3.5 rounded-lg shadow-sm shadow-brand-600/20 transition">
                         <i data-lucide="settings" class="w-4 h-4"></i>
-                        <span class="hidden md:inline">Settings (ตั้งค่า)</span>
+                        <span class="hidden md:inline">Settings</span>
                     </button>
                 </div>
             </div>
@@ -119,43 +108,34 @@
     </header>
 
     <!-- Main Content Layout -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-7 space-y-5 sm:space-y-6">
+
         <!-- Config Error / Fallback Banner -->
-        <div id="banner-config-warning" class="hidden bg-red-950/30 border-l-4 border-red-600 p-3 sm:p-4 shadow-sm flex items-start space-x-3">
-            <i data-lucide="alert-triangle" class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"></i>
-            <div class="flex-1 text-xs text-red-200">
-                <p class="font-semibold">config.json not found (ไม่พบไฟล์ config.json)</p>
-                <p class="mt-0.5">Using fallback settings from <strong class="underline cursor-pointer text-white" onclick="openSettingsModal()">localStorage</strong>.</p>
+        <div id="banner-config-warning" class="hidden bg-amber-50 border-l-4 border-amber-400 rounded-r-xl p-3 sm:p-4 shadow-sm flex items-start space-x-3">
+            <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5"></i>
+            <div class="flex-1 text-xs text-amber-800 leading-relaxed">
+                <p class="font-semibold">config.json not found</p>
+                <p class="mt-0.5">Using fallback settings from <strong class="underline cursor-pointer text-amber-900" onclick="openSettingsModal()">localStorage</strong>.</p>
             </div>
         </div>
 
         <!-- Metric Stat Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="tech-box p-4 sm:p-5 flex items-center justify-between">
                 <div>
-                    <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Total Records (บันทึกทั้งหมด)</p>
-                    <h3 id="stat-total" class="text-2xl font-bold text-white mt-1">0</h3>
+                    <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Latest Electricity</p>
+                    <h3 id="stat-electricity" class="text-2xl font-bold text-brand-600 mt-1">-</h3>
                 </div>
-                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-zinc-800 text-red-500 flex items-center justify-center border border-zinc-700/50">
-                    <i data-lucide="file-text" class="w-5 h-5 sm:w-6 sm:h-6"></i>
-                </div>
-            </div>
-            <div class="tech-box p-4 sm:p-5 flex items-center justify-between">
-                <div>
-                    <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Latest Electricity (ไฟฟ้าล่าสุด)</p>
-                    <h3 id="stat-electricity" class="text-2xl font-bold text-red-500 mt-1">-</h3>
-                </div>
-                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-950/40 text-red-500 flex items-center justify-center border border-red-900/30">
+                <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center border border-brand-100">
                     <i data-lucide="zap" class="w-5 h-5 sm:w-6 sm:h-6"></i>
                 </div>
             </div>
             <div class="tech-box p-4 sm:p-5 flex items-center justify-between">
                 <div>
-                    <p class="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Latest Water (น้ำประปาล่าสุด)</p>
-                    <h3 id="stat-water" class="text-2xl font-bold text-zinc-200 mt-1">-</h3>
+                    <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Latest Water</p>
+                    <h3 id="stat-water" class="text-2xl font-bold text-slate-900 mt-1">-</h3>
                 </div>
-                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-zinc-800 text-zinc-300 flex items-center justify-center border border-zinc-700/50">
+                <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-100 text-slate-900 flex items-center justify-center border border-slate-200">
                     <i data-lucide="droplet" class="w-5 h-5 sm:w-6 sm:h-6"></i>
                 </div>
             </div>
@@ -166,153 +146,152 @@
             <!-- Upload Box -->
             <div class="lg:col-span-6 tech-box p-4 sm:p-5 flex flex-col">
                 <div class="flex items-center justify-between mb-3 sm:mb-4">
-                    <h2 class="text-sm sm:text-base font-semibold text-white flex items-center gap-2">
-                        <i data-lucide="camera" class="w-4 h-4 sm:w-5 sm:h-5 text-red-500"></i>
-                        Scan Meter (สแกนรูปภาพ)
+                    <h2 class="text-sm sm:text-base font-semibold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="camera" class="w-4 h-4 sm:w-5 sm:h-5 text-brand-600"></i>
+                        Scan Meter
                     </h2>
-                    <span class="text-[10px] text-zinc-500 font-mono">JPG, PNG, WEBP</span>
+                    <span class="text-[10px] text-slate-400 font-mono">JPG, PNG, WEBP</span>
                 </div>
 
-                <div id="drop-zone" class="relative flex-1 min-h-[220px] sm:min-h-[250px] border border-dashed border-zinc-700/80 hover:border-red-600 p-4 flex flex-col items-center justify-center text-center bg-zinc-950/40 transition cursor-pointer group overflow-hidden">
+                <div id="drop-zone" class="relative flex-1 min-h-[220px] sm:min-h-[250px] rounded-xl border-2 border-dashed border-slate-200 hover:border-brand-400 p-4 flex flex-col items-center justify-center text-center bg-slate-50/70 transition cursor-pointer group overflow-hidden">
                     <!-- Scanner Laser Overlay -->
                     <div id="scan-effect" class="hidden scan-line"></div>
-                    <div id="scan-grid" class="hidden absolute inset-0 bg-[radial-gradient(#ef4444_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none"></div>
+                    <div id="scan-grid" class="hidden absolute inset-0 bg-[radial-gradient(#1e3a6e_1px,transparent_1px)] [background-size:16px_16px] opacity-15 pointer-events-none"></div>
 
                     <input type="file" id="input-file" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                    
+
                     <div id="upload-placeholder" class="space-y-2 pointer-events-none z-0">
-                        <div class="w-12 h-12 bg-zinc-800 text-red-500 flex items-center justify-center mx-auto group-hover:scale-105 transition duration-200 border border-zinc-700">
+                        <div class="w-12 h-12 rounded-xl bg-white text-brand-600 flex items-center justify-center mx-auto group-hover:scale-105 transition duration-200 border border-slate-200 shadow-sm">
                             <i data-lucide="upload-cloud" class="w-6 h-6"></i>
                         </div>
                         <div>
-                            <p class="text-xs sm:text-sm font-medium text-zinc-300">Drop image here or <span class="text-red-500 underline">browse</span></p>
-                            <p class="text-[11px] text-zinc-500 mt-1">Select meter image (เลือกรูปภาพมิเตอร์)</p>
+                            <p class="text-xs sm:text-sm font-medium text-slate-700">Drop image here or <span class="text-brand-600 underline">browse</span></p>
+                            <p class="text-[11px] text-slate-400 mt-1">Select meter image</p>
                         </div>
                     </div>
 
-                    <img id="img-preview" class="hidden absolute inset-0 w-full h-full object-contain bg-zinc-950 p-1" alt="Meter Preview">
-                    <button id="btn-remove-img" class="hidden absolute top-3 right-3 z-30 bg-red-600 hover:bg-red-700 text-white p-1.5 shadow transition">
+                    <img id="img-preview" class="hidden absolute inset-0 w-full h-full object-contain bg-white p-1 rounded-xl" alt="Meter Preview">
+                    <button id="btn-remove-img" class="hidden absolute top-3 right-3 z-30 bg-white hover:bg-rose-50 text-rose-500 p-1.5 rounded-lg border border-slate-200 shadow-sm transition">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
 
                 <div class="mt-4">
-                    <button id="btn-scan" disabled class="w-full bg-red-600 hover:bg-red-700 disabled:bg-zinc-800 disabled:text-zinc-600 disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 shadow-lg shadow-red-950/40 transition flex items-center justify-center gap-2 text-xs sm:text-sm">
+                    <button id="btn-scan" disabled class="w-full bg-brand-600 hover:bg-brand-700 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 rounded-lg shadow-sm shadow-brand-600/20 transition flex items-center justify-center gap-2 text-xs sm:text-sm">
                         <i data-lucide="sparkles" class="w-4 h-4"></i>
-                        <span>Process & Auto Save (ประมวลผลและบันทึกอัตโนมัติ)</span>
+                        <span>Process &amp; Auto Save</span>
                     </button>
                 </div>
             </div>
 
             <!-- AI Result Box -->
             <div class="lg:col-span-6 tech-box p-4 sm:p-5 flex flex-col">
-                <div class="flex items-center justify-between mb-3 sm:mb-4 border-b border-zinc-800 pb-3">
-                    <h2 class="text-sm sm:text-base font-semibold text-white flex items-center gap-2">
-                        <i data-lucide="check-square" class="w-4 h-4 sm:w-5 sm:h-5 text-red-500"></i>
-                        <span id="form-mode-title">AI Result & Save (ผลลัพธ์)</span>
+                <div class="flex items-center justify-between mb-3 sm:mb-4 border-b border-slate-100 pb-3">
+                    <h2 class="text-sm sm:text-base font-semibold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="check-square" class="w-4 h-4 sm:w-5 sm:h-5 text-brand-600"></i>
+                        <span id="form-mode-title">Result &amp; Save</span>
                     </h2>
                     <div class="flex items-center gap-2">
-                        <span id="edit-mode-badge" class="hidden text-[10px] font-bold px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                        <span id="edit-mode-badge" class="hidden text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                             EDITING RECORD
                         </span>
-                        <span id="ai-status-badge" class="hidden text-[10px] font-medium px-2 py-0.5 bg-zinc-800 text-zinc-300 border border-zinc-700">
+                        <span id="ai-status-badge" class="hidden text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                             Ready
                         </span>
                     </div>
                 </div>
 
                 <div id="ai-loading" class="hidden py-10 flex flex-col items-center justify-center text-center space-y-3">
-                    <div class="w-8 h-8 border-2 border-red-900 border-t-red-600 animate-spin"></div>
-                    <p class="text-xs text-red-400 font-medium animate-pulse">Scanning image with Gemini AI...</p>
+                    <div class="w-8 h-8 rounded-full border-2 border-brand-100 border-t-brand-600 animate-spin"></div>
+                    <p class="text-xs text-brand-600 font-medium animate-pulse">Scanning image...</p>
                 </div>
 
-                <div id="ai-empty-state" class="py-10 flex flex-col items-center justify-center text-center space-y-2 text-zinc-500">
+                <div id="ai-empty-state" class="py-10 flex flex-col items-center justify-center text-center space-y-2 text-slate-400">
                     <i data-lucide="scan-line" class="w-10 h-10 stroke-[1.5]"></i>
-                    <p class="text-xs">Upload image to process (อัปโหลดรูปเพื่อสแกน)</p>
+                    <p class="text-xs">Upload image to process</p>
                 </div>
 
-                <form id="form-meter-result" class="hidden flex-1 space-y-3">
+                <form id="form-meter-result" class="hidden flex-1 space-y-3.5">
                     <input type="hidden" id="editing-record-id" value="">
-                    
+                    <input type="hidden" id="raw-reading-value" value="">
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-[11px] font-medium text-zinc-400 mb-1">Meter Type (ประเภท)</label>
-                            <select id="result-type" required class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-zinc-200 focus:border-red-600 focus:outline-none">
-                                <option value="Electricity">Electricity (ไฟฟ้า)</option>
-                                <option value="Water">Water (น้ำประปา)</option>
+                            <label class="block text-[11px] font-medium text-slate-500 mb-1.5">Meter Type</label>
+                            <select id="result-type" required class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none transition">
+                                <option value="Electricity">Electricity</option>
+                                <option value="Water">Water</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-medium text-zinc-400 mb-1">Reading Value (ค่าตัวเลข)</label>
-                            <input type="number" step="any" id="result-reading" required placeholder="0000.0" class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs font-semibold text-red-500 focus:border-red-600 focus:outline-none">
+                            <label class="block text-[11px] font-medium text-slate-500 mb-1.5">
+                                Reading Value
+                                <span id="decimal-rule-hint" class="ml-1 text-[10px] font-normal text-brand-600"></span>
+                            </label>
+                            <input type="number" step="any" id="result-reading" required placeholder="0000.0" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-brand-700 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none transition">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-[11px] font-medium text-zinc-400 mb-1">Serial Number</label>
-                            <input type="text" id="result-serial" placeholder="SN-123456" class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-zinc-200 focus:border-red-600 focus:outline-none">
+                            <label class="block text-[11px] font-medium text-slate-500 mb-1.5">Serial Number</label>
+                            <input type="text" id="result-serial" placeholder="SN-123456" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none transition">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-medium text-zinc-400 mb-1">AI Confidence (ความมั่นใจ)</label>
-                            <input type="text" id="result-confidence" readonly class="w-full bg-zinc-900 border border-zinc-800 text-zinc-500 px-3 py-2 text-xs cursor-not-allowed">
+                            <label class="block text-[11px] font-medium text-slate-500 mb-1.5">AI Confidence</label>
+                            <input type="text" id="result-confidence" readonly class="w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-500 px-3 py-2 text-xs cursor-not-allowed">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-medium text-zinc-400 mb-1">Notes (หมายเหตุ)</label>
-                        <textarea id="result-notes" rows="2" placeholder="Details..." class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-zinc-200 focus:border-red-600 focus:outline-none"></textarea>
+                        <label class="block text-[11px] font-medium text-slate-500 mb-1.5">Notes</label>
+                        <textarea id="result-notes" rows="2" placeholder="Details..." class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none transition"></textarea>
                     </div>
 
                     <div class="pt-1 flex gap-2">
-                        <button type="button" id="btn-cancel-edit" class="hidden px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium py-2.5 transition">
+                        <button type="button" id="btn-cancel-edit" class="hidden px-4 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium py-2.5 rounded-lg border border-slate-200 transition">
                             Cancel
                         </button>
-                        <button type="submit" id="btn-save-db" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-4 shadow-lg shadow-red-950/40 transition flex items-center justify-center gap-2 text-xs sm:text-sm">
+                        <button type="submit" id="btn-save-db" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm shadow-brand-600/20 transition flex items-center justify-center gap-2 text-xs sm:text-sm">
                             <i data-lucide="save" class="w-4 h-4"></i>
-                            <span id="btn-save-label">Update Record (บันทึกทับ)</span>
+                            <span id="btn-save-label">Update Record</span>
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- History & Chart Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-            <div class="lg:col-span-5 tech-box p-4 sm:p-5 flex flex-col">
-                <h2 class="text-sm sm:text-base font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
-                    <i data-lucide="trending-up" class="w-4 h-4 sm:w-5 sm:h-5 text-red-500"></i>
-                    Meter Trends (แนวโน้ม)
-                </h2>
-                <div class="flex-1 min-h-[200px] sm:min-h-[220px] relative flex items-center justify-center">
-                    <canvas id="meterChart"></canvas>
-                </div>
-            </div>
-
-            <div class="lg:col-span-7 tech-box p-4 sm:p-5 flex flex-col">
+        <!-- History Section -->
+        <div class="grid grid-cols-1">
+            <div class="tech-box p-4 sm:p-5 flex flex-col">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3 sm:mb-4">
-                    <h2 class="text-sm sm:text-base font-semibold text-white flex items-center gap-2">
-                        <i data-lucide="history" class="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400"></i>
-                        Reading History (ประวัติ)
+                    <h2 class="text-sm sm:text-base font-semibold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4 sm:w-5 sm:h-5 text-slate-400"></i>
+                        Reading History
                     </h2>
-                    
+
                     <div class="flex items-center gap-2">
-                        <input type="text" id="search-input" placeholder="Search..." class="px-2.5 py-1.5 text-xs bg-zinc-950 border border-zinc-800 text-zinc-200 focus:border-red-600 focus:outline-none w-28 sm:w-36">
-                        <select id="filter-type" class="text-xs bg-zinc-950 border border-zinc-800 px-2 py-1.5 text-zinc-200 focus:border-red-600 focus:outline-none">
+                        <input type="text" id="search-input" placeholder="Search..." class="px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-700 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none w-28 sm:w-40 transition">
+                        <select id="filter-type" class="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none transition">
                             <option value="ALL">All Types</option>
                             <option value="Electricity">Electricity</option>
                             <option value="Water">Water</option>
                         </select>
-                        <button id="btn-refresh" class="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 transition" title="Refresh">
+                        <select id="rows-per-page" class="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none transition">
+                            <option value="5">5 rows</option>
+                            <option value="10">10 rows</option>
+                            <option value="20">20 rows</option>
+                        </select>
+                        <button id="btn-refresh" class="p-1.5 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition" title="Refresh">
                             <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="overflow-x-auto flex-1 border border-zinc-800">
-                    <table class="w-full text-left border-collapse min-w-[500px]">
+                <div class="overflow-x-auto flex-1 border border-slate-200 rounded-xl">
+                    <table class="w-full text-left border-collapse min-w-[560px]">
                         <thead>
-                            <tr class="bg-zinc-950 border-b border-zinc-800 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                                 <th class="py-2.5 px-3">Date-Time</th>
                                 <th class="py-2.5 px-3">Type</th>
                                 <th class="py-2.5 px-3">Reading</th>
@@ -321,46 +300,60 @@
                                 <th class="py-2.5 px-3 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="table-meter-rows" class="divide-y divide-zinc-800/60 text-xs text-zinc-300">
+                        <tbody id="table-meter-rows" class="divide-y divide-slate-100 text-[11px] text-slate-600">
                             <tr>
-                                <td colspan="6" class="py-8 text-center text-zinc-500">Loading data...</td>
+                                <td colspan="6" class="py-6 text-center text-slate-400">Loading data...</td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div class="flex items-center justify-between gap-2 mt-3">
+                    <p id="page-info" class="text-[11px] text-slate-400">-</p>
+                    <div class="flex items-center gap-1.5">
+                        <button id="btn-prev-page" class="px-2.5 py-1.5 text-[11px] font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                            Prev
+                        </button>
+                        <span id="page-indicator" class="text-[11px] font-semibold text-brand-700 px-1.5">1 / 1</span>
+                        <button id="btn-next-page" class="px-2.5 py-1.5 text-[11px] font-medium rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
     <!-- Config JSON Helper Modal -->
-    <div id="modal-config" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="tech-box max-w-xl w-full p-5 sm:p-6 shadow-2xl relative bg-zinc-900">
-            <button onclick="closeConfigModal()" class="absolute top-4 right-4 text-zinc-500 hover:text-white p-1">
+    <div id="modal-config" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="tech-box max-w-xl w-full p-5 sm:p-6 shadow-2xl relative bg-white">
+            <button onclick="closeConfigModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
-            <div class="flex items-center space-x-2 text-red-500 mb-3">
+            <div class="flex items-center space-x-2 text-brand-600 mb-3">
                 <i data-lucide="file-json" class="w-5 h-5"></i>
-                <h3 class="text-base sm:text-lg font-bold text-white">config.json Format</h3>
+                <h3 class="text-base sm:text-lg font-bold text-slate-900">config.json Format</h3>
             </div>
-            <p class="text-xs text-zinc-400 mb-3">Place <code class="bg-zinc-950 text-red-400 px-1.5 py-0.5 font-mono">config.json</code> in the same directory:</p>
-            
+            <p class="text-xs text-slate-500 mb-3">Place <code class="bg-slate-100 text-brand-700 px-1.5 py-0.5 rounded font-mono">config.json</code> in the same directory:</p>
+
             <div class="relative">
-                <pre class="bg-zinc-950 text-zinc-200 p-4 text-xs overflow-x-auto font-mono leading-relaxed border border-zinc-800" id="config-code-block">{
+                <pre class="bg-slate-50 text-slate-700 p-4 rounded-xl text-xs overflow-x-auto font-mono leading-relaxed border border-slate-200" id="config-code-block">{
   "GEMINI_API_KEY": "YOUR_GEMINI_API_KEY_HERE",
   "SUPABASE_URL": "YOUR_SUPABASE_URL_HERE",
   "SUPABASE_ANON_KEY": "YOUR_SUPABASE_ANON_KEY_HERE"
 }</pre>
-                <button id="btn-copy-config" class="absolute top-3 right-3 bg-zinc-800 hover:bg-zinc-700 text-white text-xs px-2.5 py-1.5 transition flex items-center gap-1 border border-zinc-700">
+                <button id="btn-copy-config" class="absolute top-3 right-3 bg-white hover:bg-slate-50 text-slate-600 text-xs px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 border border-slate-200 shadow-sm">
                     <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                     <span>Copy JSON</span>
                 </button>
             </div>
 
-            <hr class="my-4 border-zinc-800">
+            <hr class="my-4 border-slate-100">
 
             <div class="flex items-center justify-between">
-                <span class="text-xs text-zinc-400">Need Supabase SQL script?</span>
-                <button id="btn-copy-sql" class="text-xs text-red-500 hover:underline font-medium flex items-center gap-1">
+                <span class="text-xs text-slate-500">Need Supabase SQL script?</span>
+                <button id="btn-copy-sql" class="text-xs text-brand-600 hover:underline font-medium flex items-center gap-1">
                     <i data-lucide="database" class="w-3.5 h-3.5"></i>
                     <span>Copy Table SQL</span>
                 </button>
@@ -369,37 +362,37 @@
     </div>
 
     <!-- Manual Settings Fallback Modal -->
-    <div id="modal-settings" class="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="tech-box max-w-lg w-full p-5 sm:p-6 shadow-2xl relative bg-zinc-900">
-            <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-zinc-500 hover:text-white p-1">
+    <div id="modal-settings" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="tech-box max-w-lg w-full p-5 sm:p-6 shadow-2xl relative bg-white">
+            <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
-            <div class="flex items-center space-x-2 text-red-500 mb-4">
+            <div class="flex items-center space-x-2 text-brand-600 mb-4">
                 <i data-lucide="sliders" class="w-5 h-5"></i>
-                <h3 class="text-base sm:text-lg font-bold text-white">Fallback Settings (ตั้งค่าสำรอง)</h3>
+                <h3 class="text-base sm:text-lg font-bold text-slate-900">Fallback Settings</h3>
             </div>
-            
+
             <form id="form-settings" class="space-y-3 sm:space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Gemini API Key</label>
-                    <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-zinc-200 focus:border-red-600 focus:outline-none">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Gemini API Key</label>
+                    <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none transition">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Supabase URL</label>
-                    <input type="url" id="input-supabase-url" placeholder="https://xyz.supabase.co" class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-zinc-200 focus:border-red-600 focus:outline-none">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Supabase URL</label>
+                    <input type="url" id="input-supabase-url" placeholder="https://xyz.supabase.co" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none transition">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-zinc-300 mb-1">Supabase Anon Key</label>
-                    <input type="password" id="input-supabase-key" placeholder="eyJhbGciOi..." class="w-full bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs text-zinc-200 focus:border-red-600 focus:outline-none">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1.5">Supabase Anon Key</label>
+                    <input type="password" id="input-supabase-key" placeholder="eyJhbGciOi..." class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 focus:outline-none transition">
                 </div>
 
                 <div class="pt-2 flex gap-2">
-                    <button type="button" id="btn-reload-config" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition border border-zinc-700">
+                    <button type="button" id="btn-reload-config" class="px-3 py-2 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium rounded-lg transition border border-slate-200">
                         Reload config.json
                     </button>
-                    <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-2 shadow transition">
+                    <button type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium py-2 rounded-lg shadow-sm transition">
                         Save to localStorage
                     </button>
                 </div>
@@ -408,13 +401,19 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 max-w-md bg-zinc-900 text-white border border-zinc-800 px-4 py-3 shadow-2xl flex items-center space-x-3 pointer-events-none tech-box">
-        <i id="toast-icon" data-lucide="info" class="w-5 h-5 text-red-500"></i>
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 max-w-md bg-white text-slate-700 border border-slate-200 px-4 py-3 shadow-2xl flex items-center space-x-3 pointer-events-none tech-box">
+        <i id="toast-icon" data-lucide="info" class="w-5 h-5 text-brand-600"></i>
         <p id="toast-msg" class="text-xs font-medium"></p>
     </div>
 
     <!-- JavaScript Application Logic -->
     <script>
+        // Decimal rule per meter type (digits moved behind the decimal point)
+        const DECIMAL_RULES = {
+            Electricity: 1,   // 35674  -> 3567.4
+            Water: 3          // 40517  -> 40.517
+        };
+
         // Application State
         let appState = {
             configLoadedFromFile: false,
@@ -424,21 +423,62 @@
             supabaseClient: null,
             currentImageBase64: null,
             meterHistory: [],
-            chartInstance: null
+            currentPage: 1,
+            rowsPerPage: 5
         };
 
         // DOM Loaded Init
         window.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
-            initChart();
             setupEventListeners();
-            
+
             await loadConfigFromFile();
-            
+
             if (appState.supabaseClient) {
                 fetchMeterReadings();
             }
         });
+
+        // Auto-place the decimal point based on meter type
+        function applyDecimalRule(rawValue, meterType) {
+            if (rawValue === null || rawValue === undefined || rawValue === '') return '';
+
+            const str = String(rawValue).trim();
+
+            // AI already returned a decimal value -> keep as is
+            if (str.includes('.')) {
+                const asFloat = parseFloat(str);
+                return isNaN(asFloat) ? '' : asFloat;
+            }
+
+            const num = parseFloat(str);
+            if (isNaN(num)) return '';
+
+            const places = DECIMAL_RULES[meterType] !== undefined ? DECIMAL_RULES[meterType] : 0;
+            if (places === 0) return num;
+
+            return parseFloat((num / Math.pow(10, places)).toFixed(places));
+        }
+
+        // Show which rule is being applied next to the Reading field
+        function updateDecimalRuleHint() {
+            const type = document.getElementById('result-type').value;
+            const places = DECIMAL_RULES[type] !== undefined ? DECIMAL_RULES[type] : 0;
+            const hint = document.getElementById('decimal-rule-hint');
+            hint.textContent = places > 0 ? `(auto ${places} decimal${places > 1 ? 's' : ''})` : '';
+        }
+
+        // Recalculate the reading when the user switches meter type
+        function recalcReadingFromRaw() {
+            const raw = document.getElementById('raw-reading-value').value;
+            if (!raw) {
+                updateDecimalRuleHint();
+                return;
+            }
+            const type = document.getElementById('result-type').value;
+            document.getElementById('result-reading').value = applyDecimalRule(raw, type);
+            updateDecimalRuleHint();
+        }
 
         // Load Settings from config.json
         async function loadConfigFromFile() {
@@ -459,24 +499,24 @@
                 appState.supabaseKey = config.SUPABASE_ANON_KEY;
                 appState.configLoadedFromFile = true;
 
-                badge.className = 'inline-flex items-center px-2.5 py-1 text-[11px] font-medium bg-red-950/60 text-red-400 border border-red-800/60';
-                badge.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 mr-1.5 text-red-500"></i> Loaded config.json`;
+                badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-brand-50 text-brand-700 border border-brand-100';
+                badge.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 mr-1.5 text-brand-600"></i> Loaded config.json`;
                 warningBanner.classList.add('hidden');
 
                 initSupabaseClient();
-                showToast('Config loaded successfully (โหลดการตั้งค่าสำเร็จ)', 'success');
+                showToast('Config loaded successfully', 'success');
 
             } catch (error) {
                 console.warn('config.json load error:', error.message);
-                
+
                 appState.configLoadedFromFile = false;
                 appState.geminiKey = localStorage.getItem('gemini_api_key') || '';
                 appState.supabaseUrl = localStorage.getItem('supabase_url') || '';
                 appState.supabaseKey = localStorage.getItem('supabase_anon_key') || '';
 
-                badge.className = 'inline-flex items-center px-2.5 py-1 text-[11px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700';
-                badge.innerHTML = `<i data-lucide="alert-circle" class="w-3.5 h-3.5 mr-1.5 text-zinc-400"></i> Manual Config`;
-                
+                badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200';
+                badge.innerHTML = `<i data-lucide="alert-circle" class="w-3.5 h-3.5 mr-1.5 text-slate-400"></i> Manual Config`;
+
                 warningBanner.classList.remove('hidden');
                 initSupabaseClient();
             }
@@ -520,17 +560,20 @@
             inputFile.addEventListener('change', handleFileSelect);
             btnRemoveImg.addEventListener('click', resetImageUpload);
 
+            // Re-apply the decimal rule when meter type changes
+            document.getElementById('result-type').addEventListener('change', recalcReadingFromRaw);
+
             ['dragenter', 'dragover'].forEach(eventName => {
                 dropZone.addEventListener(eventName, (e) => {
                     e.preventDefault();
-                    dropZone.classList.add('border-red-600', 'bg-red-950/20');
+                    dropZone.classList.add('border-brand-400', 'bg-brand-50');
                 });
             });
 
             ['dragleave', 'drop'].forEach(eventName => {
                 dropZone.addEventListener(eventName, (e) => {
                     e.preventDefault();
-                    dropZone.classList.remove('border-red-600', 'bg-red-950/20');
+                    dropZone.classList.remove('border-brand-400', 'bg-brand-50');
                 });
             });
 
@@ -547,8 +590,29 @@
             document.getElementById('btn-cancel-edit').addEventListener('click', resetFormToCreateMode);
             document.getElementById('btn-refresh').addEventListener('click', fetchMeterReadings);
 
-            document.getElementById('search-input').addEventListener('input', renderTableRows);
-            document.getElementById('filter-type').addEventListener('change', renderTableRows);
+            document.getElementById('search-input').addEventListener('input', () => {
+                appState.currentPage = 1;
+                renderTableRows();
+            });
+            document.getElementById('filter-type').addEventListener('change', () => {
+                appState.currentPage = 1;
+                renderTableRows();
+            });
+            document.getElementById('rows-per-page').addEventListener('change', (e) => {
+                appState.rowsPerPage = parseInt(e.target.value, 10);
+                appState.currentPage = 1;
+                renderTableRows();
+            });
+            document.getElementById('btn-prev-page').addEventListener('click', () => {
+                if (appState.currentPage > 1) {
+                    appState.currentPage--;
+                    renderTableRows();
+                }
+            });
+            document.getElementById('btn-next-page').addEventListener('click', () => {
+                appState.currentPage++;
+                renderTableRows();
+            });
         }
 
         function handleFileSelect() {
@@ -556,7 +620,7 @@
             if (!file) return;
 
             if (!file.type.startsWith('image/')) {
-                showToast('Please select an image file (โปรดเลือกไฟล์รูปภาพเท่านั้น)', 'error');
+                showToast('Please select an image file', 'error');
                 return;
             }
 
@@ -588,7 +652,7 @@
         // Process Image with Gemini API and AUTO-SAVE
         async function processAndAutoSave() {
             if (!appState.geminiKey) {
-                showToast('Missing Gemini API Key (ไม่พบ Gemini API Key)', 'error');
+                showToast('Missing Gemini API Key', 'error');
                 openSettingsModal();
                 return;
             }
@@ -611,11 +675,12 @@
 Extract the details and return ONLY a valid JSON object matching this structure:
 {
   "meter_type": "Electricity" or "Water",
-  "reading_value": numerical value on dial/digits (number),
+  "reading_value": all visible digits combined into one plain number WITHOUT a decimal point (number),
   "serial_number": "meter serial number string if visible, else null",
   "confidence": "High" or "Medium" or "Low",
-  "notes": "Short description in Thai language"
-}`;
+  "notes": "Short description in English language"
+}
+Do not insert any decimal point yourself. Return the digits exactly as printed on the meter.`;
 
                 const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${appState.geminiKey}`;
 
@@ -645,11 +710,14 @@ Extract the details and return ONLY a valid JSON object matching this structure:
                 const parsed = JSON.parse(cleanedJson);
 
                 // Fill Form Data
-                document.getElementById('result-type').value = (parsed.meter_type === 'Water') ? 'Water' : 'Electricity';
-                document.getElementById('result-reading').value = parsed.reading_value !== undefined ? parsed.reading_value : '';
+                const detectedType = (parsed.meter_type === 'Water') ? 'Water' : 'Electricity';
+                document.getElementById('result-type').value = detectedType;
+                document.getElementById('raw-reading-value').value = parsed.reading_value !== undefined ? parsed.reading_value : '';
+                document.getElementById('result-reading').value = applyDecimalRule(parsed.reading_value, detectedType);
+                updateDecimalRuleHint();
                 document.getElementById('result-serial').value = parsed.serial_number || '';
                 document.getElementById('result-confidence').value = parsed.confidence || 'Medium';
-                document.getElementById('result-notes').value = parsed.notes || 'อ่านค่าสำเร็จโดย Gemini AI';
+                document.getElementById('result-notes').value = '';
 
                 // Automatically Save to Supabase
                 await autoSaveToSupabase({
@@ -666,7 +734,7 @@ Extract the details and return ONLY a valid JSON object matching this structure:
 
                 const badge = document.getElementById('ai-status-badge');
                 badge.textContent = `Confidence: ${parsed.confidence || 'Medium'}`;
-                badge.className = 'text-[10px] font-medium px-2 py-0.5 bg-red-950 text-red-400 border border-red-800';
+                badge.className = 'text-[10px] font-medium px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-100';
                 badge.classList.remove('hidden');
 
             } catch (error) {
@@ -692,7 +760,7 @@ Extract the details and return ONLY a valid JSON object matching this structure:
             if (error) {
                 showToast(`Auto-save failed: ${error.message}`, 'error');
             } else {
-                showToast('สแกนและบันทึกลง Supabase สำเร็จ!', 'success');
+                showToast('Scanned and saved to Supabase successfully!', 'success');
                 fetchMeterReadings();
             }
         }
@@ -716,14 +784,14 @@ Extract the details and return ONLY a valid JSON object matching this structure:
 
             try {
                 if (recordId) {
-                    // Update existing record (แก้ไขทับ)
+                    // Update existing record
                     const { error } = await appState.supabaseClient
                         .from('meter_readings')
                         .update(payload)
                         .eq('id', recordId);
 
                     if (error) throw error;
-                    showToast('แก้ไขข้อมูลเรียบร้อยแล้ว! (Record Updated)', 'success');
+                    showToast('Record updated successfully!', 'success');
                 } else {
                     // Create new record
                     if (appState.currentImageBase64) payload.image_url = appState.currentImageBase64;
@@ -732,7 +800,7 @@ Extract the details and return ONLY a valid JSON object matching this structure:
                         .insert([payload]);
 
                     if (error) throw error;
-                    showToast('บันทึกข้อมูลเรียบร้อยแล้ว!', 'success');
+                    showToast('Record saved successfully!', 'success');
                 }
 
                 resetFormToCreateMode();
@@ -745,23 +813,25 @@ Extract the details and return ONLY a valid JSON object matching this structure:
             }
         }
 
-        // Load Record Into Form to Edit (กดแก้ไขทับ)
+        // Load Record Into Form to Edit
         function editRecord(id) {
             const item = appState.meterHistory.find(m => m.id === id);
             if (!item) return;
 
             document.getElementById('editing-record-id').value = item.id;
             document.getElementById('result-type').value = item.meter_type;
+            document.getElementById('raw-reading-value').value = '';
             document.getElementById('result-reading').value = item.reading_value;
+            updateDecimalRuleHint();
             document.getElementById('result-serial').value = item.serial_number || '';
             document.getElementById('result-confidence').value = item.confidence || 'Manual Edit';
             document.getElementById('result-notes').value = item.notes || '';
 
             // Update UI for Edit mode
-            document.getElementById('form-mode-title').textContent = 'Edit Record (แก้ไขข้อมูล)';
+            document.getElementById('form-mode-title').textContent = 'Edit Record';
             document.getElementById('edit-mode-badge').classList.remove('hidden');
             document.getElementById('btn-cancel-edit').classList.remove('hidden');
-            document.getElementById('btn-save-label').textContent = 'Update Record (บันทึกทับ)';
+            document.getElementById('btn-save-label').textContent = 'Update Record';
 
             document.getElementById('ai-empty-state').classList.add('hidden');
             document.getElementById('form-meter-result').classList.remove('hidden');
@@ -771,10 +841,11 @@ Extract the details and return ONLY a valid JSON object matching this structure:
 
         function resetFormToCreateMode() {
             document.getElementById('editing-record-id').value = '';
-            document.getElementById('form-mode-title').textContent = 'AI Result & Save (ผลลัพธ์)';
+            document.getElementById('raw-reading-value').value = '';
+            document.getElementById('form-mode-title').textContent = 'Result & Save';
             document.getElementById('edit-mode-badge').classList.add('hidden');
             document.getElementById('btn-cancel-edit').classList.add('hidden');
-            document.getElementById('btn-save-label').textContent = 'Save Record (บันทึก)';
+            document.getElementById('btn-save-label').textContent = 'Save Record';
 
             document.getElementById('form-meter-result').classList.add('hidden');
             document.getElementById('ai-empty-state').classList.remove('hidden');
@@ -786,7 +857,7 @@ Extract the details and return ONLY a valid JSON object matching this structure:
             if (!appState.supabaseClient) return;
 
             const tbody = document.getElementById('table-meter-rows');
-            tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-zinc-500">Loading records...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">Loading records...</td></tr>`;
 
             try {
                 const { data, error } = await appState.supabaseClient
@@ -799,14 +870,22 @@ Extract the details and return ONLY a valid JSON object matching this structure:
                 appState.meterHistory = data || [];
                 updateDashboardStats();
                 renderTableRows();
-                updateChart();
 
             } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-red-500">Failed to load data (${error.message})</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-rose-500">Failed to load data (${error.message})</td></tr>`;
             }
         }
 
-        // Render Table
+        // Format a stored reading using the rule of its meter type
+        function formatReadingDisplay(value, meterType) {
+            const places = DECIMAL_RULES[meterType] !== undefined ? DECIMAL_RULES[meterType] : 0;
+            return Number(value).toLocaleString('en-US', {
+                minimumFractionDigits: places,
+                maximumFractionDigits: places
+            });
+        }
+
+        // Render Table with Pagination
         function renderTableRows() {
             const tbody = document.getElementById('table-meter-rows');
             const search = document.getElementById('search-input').value.toLowerCase();
@@ -820,34 +899,49 @@ Extract the details and return ONLY a valid JSON object matching this structure:
                 return matchType && matchSearch;
             });
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-zinc-500">No records found (ไม่พบข้อมูล)</td></tr>`;
+            const perPage = appState.rowsPerPage;
+            const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+            if (appState.currentPage > totalPages) appState.currentPage = totalPages;
+            if (appState.currentPage < 1) appState.currentPage = 1;
+
+            const startIndex = (appState.currentPage - 1) * perPage;
+            const pageItems = filtered.slice(startIndex, startIndex + perPage);
+
+            document.getElementById('page-indicator').textContent = `${appState.currentPage} / ${totalPages}`;
+            document.getElementById('btn-prev-page').disabled = appState.currentPage <= 1;
+            document.getElementById('btn-next-page').disabled = appState.currentPage >= totalPages;
+            document.getElementById('page-info').textContent = filtered.length === 0
+                ? 'No records'
+                : `Showing ${startIndex + 1}-${startIndex + pageItems.length} of ${filtered.length} records`;
+
+            if (pageItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">No records found</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = filtered.map(item => {
+            tbody.innerHTML = pageItems.map(item => {
                 const dateStr = new Date(item.created_at).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
-                let badgeColor = 'bg-zinc-800 text-zinc-300 border-zinc-700';
-                if (item.meter_type === 'Electricity') badgeColor = 'bg-red-950/60 text-red-400 border-red-800/60';
-                if (item.meter_type === 'Water') badgeColor = 'bg-zinc-800 text-zinc-300 border-zinc-700';
+                let badgeColor = 'bg-slate-100 text-slate-600 border-slate-200';
+                if (item.meter_type === 'Electricity') badgeColor = 'bg-brand-50 text-brand-700 border-brand-100';
+                if (item.meter_type === 'Water') badgeColor = 'bg-slate-900 text-white border-slate-900';
 
                 return `
-                    <tr class="hover:bg-zinc-900/50 transition">
-                        <td class="py-2.5 px-3 text-zinc-400">${dateStr}</td>
-                        <td class="py-2.5 px-3">
-                            <span class="px-2 py-0.5 text-[10px] font-semibold border ${badgeColor}">
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-2 px-3 text-slate-500 whitespace-nowrap">${dateStr}</td>
+                        <td class="py-2 px-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badgeColor}">
                                 ${item.meter_type}
                             </span>
                         </td>
-                        <td class="py-2.5 px-3 font-bold text-white">${item.reading_value.toLocaleString()}</td>
-                        <td class="py-2.5 px-3 font-mono text-zinc-400">${item.serial_number || '-'}</td>
-                        <td class="py-2.5 px-3 text-zinc-400 max-w-[120px] truncate" title="${item.notes || ''}">${item.notes || '-'}</td>
-                        <td class="py-2.5 px-3 text-right space-x-1">
-                            <button onclick="editRecord('${item.id}')" class="text-zinc-400 hover:text-amber-400 p-1 transition" title="Edit (แก้ไขทับ)">
-                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        <td class="py-2 px-3 font-semibold text-slate-900">${formatReadingDisplay(item.reading_value, item.meter_type)}</td>
+                        <td class="py-2 px-3 font-mono text-slate-500">${item.serial_number || '-'}</td>
+                        <td class="py-2 px-3 text-slate-500 max-w-[160px] truncate" title="${item.notes || ''}">${item.notes || '-'}</td>
+                        <td class="py-2 px-3 text-right space-x-1">
+                            <button onclick="editRecord('${item.id}')" class="text-slate-400 hover:text-amber-500 p-1 rounded-md hover:bg-amber-50 transition" title="Edit">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                             </button>
-                            <button onclick="deleteRecord('${item.id}')" class="text-zinc-500 hover:text-red-500 p-1 transition" title="Delete">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            <button onclick="deleteRecord('${item.id}')" class="text-slate-400 hover:text-rose-500 p-1 rounded-md hover:bg-rose-50 transition" title="Delete">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                             </button>
                         </td>
                     </tr>
@@ -858,11 +952,11 @@ Extract the details and return ONLY a valid JSON object matching this structure:
         }
 
         async function deleteRecord(id) {
-            if (!confirm('Confirm deletion? (ต้องการลบรายการนี้ใช่หรือไม่?)')) return;
+            if (!confirm('Confirm deletion?')) return;
             try {
                 const { error } = await appState.supabaseClient.from('meter_readings').delete().eq('id', id);
                 if (error) throw error;
-                showToast('Record deleted (ลบรายการเรียบร้อย)', 'success');
+                showToast('Record deleted', 'success');
                 fetchMeterReadings();
             } catch (error) {
                 showToast(`Delete failed: ${error.message}`, 'error');
@@ -870,55 +964,11 @@ Extract the details and return ONLY a valid JSON object matching this structure:
         }
 
         function updateDashboardStats() {
-            document.getElementById('stat-total').textContent = appState.meterHistory.length;
             const latestElec = appState.meterHistory.find(m => m.meter_type === 'Electricity');
             const latestWater = appState.meterHistory.find(m => m.meter_type === 'Water');
 
-            document.getElementById('stat-electricity').textContent = latestElec ? `${latestElec.reading_value.toLocaleString()} kWh` : '-';
-            document.getElementById('stat-water').textContent = latestWater ? `${latestWater.reading_value.toLocaleString()} m³` : '-';
-        }
-
-        function initChart() {
-            const ctx = document.getElementById('meterChart').getContext('2d');
-            appState.chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        { label: 'Electricity', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', fill: true, tension: 0 },
-                        { label: 'Water', data: [], borderColor: '#e4e4e7', backgroundColor: 'rgba(228, 228, 231, 0.05)', fill: true, tension: 0 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { 
-                        y: { 
-                            beginAtZero: false,
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            ticks: { color: '#a1a1aa' }
-                        },
-                        x: {
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            ticks: { color: '#a1a1aa' }
-                        }
-                    },
-                    plugins: {
-                        legend: { labels: { color: '#f4f4f5' } }
-                    }
-                }
-            });
-        }
-
-        function updateChart() {
-            if (!appState.chartInstance) return;
-            const sorted = [...appState.meterHistory].reverse();
-            const labels = sorted.map(item => new Date(item.created_at).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }));
-            
-            appState.chartInstance.data.labels = labels;
-            appState.chartInstance.data.datasets[0].data = sorted.map(i => i.meter_type === 'Electricity' ? i.reading_value : null);
-            appState.chartInstance.data.datasets[1].data = sorted.map(i => i.meter_type === 'Water' ? i.reading_value : null);
-            appState.chartInstance.update();
+            document.getElementById('stat-electricity').textContent = latestElec ? `${formatReadingDisplay(latestElec.reading_value, 'Electricity')} kWh` : '-';
+            document.getElementById('stat-water').textContent = latestWater ? `${formatReadingDisplay(latestWater.reading_value, 'Water')} m³` : '-';
         }
 
         function openConfigModal() { document.getElementById('modal-config').classList.remove('hidden'); }
@@ -985,7 +1035,7 @@ create policy "Public Meter Readings" on public.meter_readings for all using (tr
 
             toastMsg.textContent = message;
             toastIcon.setAttribute('data-lucide', type === 'success' ? 'check-circle' : type === 'error' ? 'alert-circle' : 'info');
-            toastIcon.className = `w-5 h-5 ${type === 'success' ? 'text-red-500' : type === 'error' ? 'text-red-400' : 'text-zinc-400'}`;
+            toastIcon.className = `w-5 h-5 ${type === 'success' ? 'text-brand-600' : type === 'error' ? 'text-rose-500' : 'text-slate-400'}`;
             lucide.createIcons();
 
             toast.classList.remove('translate-y-20', 'opacity-0');
